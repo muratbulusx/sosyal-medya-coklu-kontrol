@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sosyal Medya Çoklu Kontrol</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f3f2ee; --card: #ffffff; --ink: #191b20; --muted: #686c75; --line: #e2e0d9; --soft: #f1f0ea;
+    --accent: #1d4ed8; --accent-ink: #ffffff; --accent-soft: #e6ecfd;
+    --ok: #12734a; --ok-soft: #e0f3e9; --warn: #96590a; --warn-soft: #fbefd9; --err: #b42828; --err-soft: #fbe6e4;
+    --shadow: 0 1px 2px rgb(20 20 30 / .05), 0 8px 24px rgb(20 20 30 / .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121317; --card: #1b1d23; --ink: #eef0f4; --muted: #9ba1ad; --line: #2e313a; --soft: #24262e;
+      --accent: #7fa4ff; --accent-ink: #0d1220; --accent-soft: #1f2a4a;
+      --ok: #5ccf9b; --ok-soft: #15332a; --warn: #eab467; --warn-soft: #37291a; --err: #f58b84; --err-soft: #3c1f1e;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 56px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--soft); color: var(--muted); white-space: nowrap; }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.on { background: var(--ok-soft); color: var(--ok); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+  .card + .card { margin-top: 16px; }
+  h2 { font-size: 16px; font-weight: 650; margin: 0 0 12px; }
+
+  .setup { margin-bottom: 16px; border-color: var(--accent); }
+  .setup ol { margin: 0 0 16px; padding-left: 20px; }
+  .setup li { margin-bottom: 8px; }
+  .setup li:last-child { margin-bottom: 0; }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--soft); padding: 2px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+  .link { background: none; border: 0; padding: 0 0 0 4px; min-height: 0; color: var(--accent); font-weight: 600; text-decoration: underline; font-size: inherit; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 800px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  .layout > div { min-width: 0; }
+
+  .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 10px; margin: 0 -10px; border-radius: 14px; border: 2px dashed transparent; transition: border-color .15s, background .15s; }
+  .slots.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  @media (max-width: 480px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .slot { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--soft); }
+  .slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slot.filled { cursor: grab; }
+  .slot.dragging { opacity: .4; }
+  .slot.target { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .add { width: 100%; height: 100%; min-height: 0; border: 1.5px dashed var(--line); border-radius: 12px; background: transparent; color: var(--muted); font-size: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; }
+  .add:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .add b { font-size: 28px; font-weight: 400; line-height: 1; }
+  .ghost { border: 0; }
+  .badge { position: absolute; top: 6px; left: 6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: rgb(0 0 0 / .68); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+  .tool { position: absolute; width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: rgb(0 0 0 / .68); color: #fff; font-size: 15px; line-height: 1; display: grid; place-items: center; }
+  .tool:hover:not(:disabled) { background: rgb(0 0 0 / .88); }
+  .remove { top: 4px; right: 4px; }
+  .left { bottom: 4px; left: 4px; }
+  .right { bottom: 4px; right: 4px; }
+  .hint { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+
+  textarea { display: block; width: 100%; min-height: 150px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: inherit; font: inherit; resize: vertical; }
+  textarea:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .limits { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .limits .over { color: var(--err); font-weight: 650; }
+
+  .platform-row { padding: 10px 0; }
+  .platform-row + .platform-row { border-top: 1px solid var(--line); }
+  .platform { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .account { display: block; width: 100%; height: 40px; margin-top: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: transparent; color: inherit; font: inherit; font-size: 15px; }
+  .account::placeholder { color: var(--muted); }
+  .platform span.name { flex: 1; font-weight: 550; }
+  .tile { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; }
+  .tile.instagram { background: linear-gradient(45deg, #f09433, #dc2743 55%, #bc1888); }
+  .tile.facebook { background: #1877f2; }
+  .tile.nsosyal { background: linear-gradient(135deg, #37c5d8, #2b55e0); }
+  .tile.x { background: #000; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .18); }
+  .switch { appearance: none; flex: none; width: 42px; height: 24px; margin: 0; border-radius: 12px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .3); transition: transform .15s; }
+  .switch:checked { background: var(--accent); }
+  .switch:checked::after { transform: translateX(18px); }
+
+  button { min-height: 44px; padding: 8px 16px; border-radius: 11px; border: 1px solid var(--line); background: var(--card); color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--soft); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button.primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
+  .actions { display: grid; gap: 8px; margin-top: 16px; }
+  .actions .primary { min-height: 50px; font-size: 17px; }
+  #error { color: var(--err); margin: 12px 0 0; font-size: 15px; }
+  #error:empty { display: none; }
+
+  #status { list-style: none; margin: 0; padding: 0; }
+  #status li { display: flex; gap: 12px; padding: 12px 0; }
+  #status li + li { border-top: 1px solid var(--line); }
+  #status .body { flex: 1; min-width: 0; }
+  #status .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
+  #status .msg { color: var(--muted); font-size: 14px; margin-top: 2px; overflow-wrap: anywhere; }
+  .tag { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; padding: 2px 9px; border-radius: 999px; background: var(--soft); color: var(--muted); }
+  .tag.paylasildi, .tag.hazir { background: var(--ok-soft); color: var(--ok); }
+  .tag.giris-bekleniyor, .tag.kontrol-et { background: var(--warn-soft); color: var(--warn); }
+  .tag.hata { background: var(--err-soft); color: var(--err); }
+  .found { font-size: 14px; margin-top: 4px; font-weight: 600; overflow-wrap: anywhere; }
+  .save-account { min-height: 36px; margin-top: 8px; padding: 4px 12px; font-size: 14px; }
+  .tag.calisiyor { background: var(--accent-soft); color: var(--accent); }
+  .tag.calisiyor::before { content: ""; width: 11px; height: 11px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  dialog { border: 1px solid var(--line); border-radius: 18px; background: var(--card); color: var(--ink); padding: 22px; width: min(440px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgb(10 10 15 / .55); }
+  dialog h2 { font-size: 19px; margin-bottom: 6px; }
+  dialog p { margin: 0 0 12px; color: var(--muted); }
+  .sum-images { display: flex; gap: 6px; margin-bottom: 12px; }
+  .sum-images img { width: 64px; height: 64px; object-fit: cover; border-radius: 9px; min-width: 0; flex: 0 1 64px; }
+  .sum-caption { background: var(--soft); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 15px; max-height: 110px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .sum-targets { display: grid; gap: 8px; margin-bottom: 18px; }
+  .sum-targets .tile { width: 28px; height: 28px; font-size: 13px; border-radius: 8px; }
+  .sum-targets > span { display: flex; align-items: center; gap: 8px; font-size: 15px; overflow-wrap: anywhere; }
+  .sum-targets b { font-weight: 650; }
+  .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+      </span>
+      Sosyal Medya Çoklu Kontrol
+    </div>
+    <span class="pill" id="pill" role="status">Chrome'a bağlı değil</span>
+  </header>
+
+  <section class="card setup" id="setup" hidden>
+    <h2>Önce Chrome'a bağlanalım</h2>
+    <ol>
+      <li>Hesapların açık olduğu Chrome'da yeni sekmeye şu adresi yapıştır: <code>chrome://inspect/#remote-debugging</code><button class="link" id="copy">Kopyala</button></li>
+      <li><b>Allow remote debugging for this browser instance</b> kutusunu işaretle.</li>
+      <li>Aşağıdaki düğmeye bas, Chrome izin sorarsa <b>İzin ver</b> de.</li>
+    </ol>
+    <button class="primary" id="connect">Chrome'a bağlan</button>
+    <p class="hint" id="connectMessage" role="status"></p>
+  </section>
+
+  <div class="layout">
+    <div>
+      <section class="card">
+        <h2>Görseller</h2>
+        <div class="slots" id="slots"></div>
+        <input id="images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+        <p class="hint">En fazla 4 görsel. Sürükleyip bırakabilir, sürükleyerek sırasını değiştirebilirsin.</p>
+      </section>
+      <section class="card">
+        <h2><label for="caption">Açıklama</label></h2>
+        <textarea id="caption" placeholder="Gönderi metnini yaz..."></textarea>
+        <div class="limits" id="limits"></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <h2>Nerede paylaşılsın?</h2>
+        <div id="platforms"></div>
+        <div class="actions">
+          <button class="primary" id="live">Paylaş</button>
+          <button id="dry">Dene (paylaşmaz)</button>
+        </div>
+        <p class="hint">"Dene" her şeyi hazırlar ama Paylaş düğmesine basmaz, sekmeler açık kalır.</p>
+        <p id="error" role="alert"></p>
+      </section>
+      <section class="card" id="statusCard" hidden>
+        <h2 id="statusTitle"></h2>
+        <ul id="status" aria-live="polite"></ul>
+      </section>
+    </div>
+  </div>
+</main>
+
+<dialog id="confirm" aria-labelledby="confirmTitle">
+  <h2 id="confirmTitle">Gönderi yayınlansın mı?</h2>
+  <p>Her platformda önce açık hesap kontrol edilir. Yazdığın hesapla eşleşmezse orada paylaşılmaz.</p>
+  <div class="sum-images" id="sumImages"></div>
+  <div class="sum-caption" id="sumCaption"></div>
+  <div class="sum-targets" id="sumTargets"></div>
+  <div class="dialog-actions">
+    <button id="cancelShare" autofocus>Vazgeç</button>
+    <button class="primary" id="confirmShare">Evet, paylaş</button>
+  </div>
+</dialog>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const MAX_IMAGES = 4;
+  const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const TILES = { instagram: 'IG', facebook: 'f', nsosyal: 'N', x: '𝕏' };
+  const LIMITS = { x: 280, instagram: 2200, nsosyal: 10000 };
+  const LABELS = { bekliyor: 'Sırada', calisiyor: 'Çalışıyor', 'giris-bekleniyor': 'Giriş bekleniyor', hazir: 'Hazır', paylasildi: 'Paylaşıldı', 'kontrol-et': 'Kontrol et', hata: 'Hata' };
+
+  let images = []; // { file, url }
+  let platformsReady = false;
+  let running = false;
+  let lastData = '';
+  let dragIndex = null;
+  let ownLiveRun = false;
+
+  const tile = (id) => {
+    const el = document.createElement('span');
+    el.className = `tile ${id}`;
+    el.textContent = TILES[id] ?? id[0].toUpperCase();
+    el.setAttribute('aria-hidden', 'true');
+    return el;
+  };
+
+  function addFiles(files) {
+    $('error').textContent = '';
+    const picked = [...files];
+    const usable = picked.filter((file) => TYPES.includes(file.type));
+    const room = MAX_IMAGES - images.length;
+    if (usable.length < picked.length) $('error').textContent = 'Yalnızca JPEG, PNG veya WebP eklenebilir; diğerleri alınmadı.';
+    else if (usable.length > room) $('error').textContent = `En fazla ${MAX_IMAGES} görsel eklenebilir; fazlası alınmadı.`;
+    images = images.concat(usable.slice(0, room).map((file) => ({ file, url: URL.createObjectURL(file) })));
+    renderSlots();
+  }
+
+  function moveImage(from, to) {
+    if (to < 0 || to >= images.length) return;
+    const [item] = images.splice(from, 1);
+    images.splice(to, 0, item);
+    renderSlots();
+  }
+
+  function toolButton(className, text, label, onClick) {
+    const button = document.createElement('button');
+    button.className = `tool ${className}`;
+    button.textContent = text;
+    button.setAttribute('aria-label', label);
+    button.onclick = onClick;
+    return button;
+  }
+
+  function renderSlots() {
+    const cells = [];
+    images.forEach(({ url }, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'slot filled';
+      cell.draggable = true;
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = `Görsel ${i + 1}`;
+      img.draggable = false;
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = i + 1;
+      cell.append(img, badge, toolButton('remove', '✕', `Görsel ${i + 1} kaldır`, () => {
+        URL.revokeObjectURL(url);
+        images.splice(i, 1);
+        renderSlots();
+      }));
+      if (images.length > 1) {
+        if (i > 0) cell.append(toolButton('left', '←', `Görsel ${i + 1} öne al`, () => moveImage(i, i - 1)));
+        if (i < images.length - 1) cell.append(toolButton('right', '→', `Görsel ${i + 1} arkaya al`, () => moveImage(i, i + 1)));
+      }
+      cell.ondragstart = (event) => {
+        dragIndex = i;
+        event.dataTransfer.effectAllowed = 'move';
+        cell.classList.add('dragging');
+      };
+      cell.ondragend = () => { dragIndex = null; renderSlots(); };
+      cell.ondragover = (event) => {
+        if (dragIndex === null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        cell.classList.add('target');
+      };
+      cell.ondragleave = () => cell.classList.remove('target');
+      cell.ondrop = (event) => {
+        if (dragIndex === null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        moveImage(dragIndex, i);
+      };
+      cells.push(cell);
+    });
+    for (let i = images.length; i < MAX_IMAGES; i += 1) {
+      const cell = document.createElement('div');
+      cell.className = 'slot ghost';
+      const add = document.createElement('button');
+      add.className = 'add';
+      const plus = document.createElement('b');
+      plus.textContent = '+';
+      add.append(plus, i === images.length ? 'Görsel ekle' : '');
+      if (i !== images.length) add.setAttribute('aria-label', 'Görsel ekle');
+      add.onclick = () => $('images').click();
+      cell.append(add);
+      cells.push(cell);
+    }
+    $('slots').replaceChildren(...cells);
+  }
+
+  $('images').onchange = (event) => {
+    addFiles(event.target.files);
+    event.target.value = '';
+  };
+
+  const slots = $('slots');
+  slots.ondragover = (event) => {
+    if (dragIndex !== null) return;
+    event.preventDefault();
+    slots.classList.add('dragover');
+  };
+  slots.ondragleave = (event) => {
+    if (!slots.contains(event.relatedTarget)) slots.classList.remove('dragover');
+  };
+  slots.ondrop = (event) => {
+    slots.classList.remove('dragover');
+    if (dragIndex !== null) return;
+    event.preventDefault();
+    addFiles(event.dataTransfer.files);
+  };
+  // Pencerenin başka yerine bırakılan dosya sayfayı değiştirmesin.
+  window.addEventListener('dragover', (event) => event.preventDefault());
+  window.addEventListener('drop', (event) => event.preventDefault());
+
+  const selectedBoxes = () => [...document.querySelectorAll('#platforms input:checked')];
+
+  function updateLimits() {
+    const length = [...$('caption').value].length;
+    const rows = selectedBoxes()
+      .filter((box) => LIMITS[box.value])
+      .map((box) => {
+        const limit = LIMITS[box.value];
+        const row = document.createElement('span');
+        row.textContent = `${box.dataset.name} ${length.toLocaleString('tr-TR')}/${limit.toLocaleString('tr-TR')}`;
+        if (length > limit) {
+          row.className = 'over';
+          row.textContent += ' — çok uzun';
+        }
+        return row;
+      });
+    $('limits').replaceChildren(...rows);
+  }
+  $('caption').oninput = updateLimits;
+
+  function updateShareLabel() {
+    const count = selectedBoxes().length;
+    $('live').textContent = count ? `${count} yerde paylaş` : 'Paylaş';
+    updateLimits();
+  }
+
+  function validate(live) {
+    $('error').textContent = '';
+    const missing = selectedBoxes().filter((box) => !accountInput(box.value).value.trim());
+    if (!images.length) $('error').textContent = 'En az bir görsel ekle.';
+    else if (!selectedBoxes().length) $('error').textContent = 'En az bir platform seç.';
+    else if (live && missing.length) {
+      $('error').textContent = `Önce paylaşılacak hesabı yaz: ${missing.map((box) => box.dataset.name).join(', ')}. Hesap adını görmek için "Dene"ye basabilirsin.`;
+    }
+    return !$('error').textContent;
+  }
+
+  const accountInput = (id) => document.querySelector(`.account[data-id="${id}"]`);
+  const normalizeAccount = (name) =>
+    (name ?? '').normalize('NFC').trim().replace(/^@/, '').replace(/\s+/g, ' ').toLocaleLowerCase('tr');
+
+  function saveAccounts() {
+    const accounts = Object.fromEntries(
+      [...document.querySelectorAll('.account')].map((input) => [input.dataset.id, input.value.trim()]),
+    );
+    return fetch('/api/hesaplar', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(accounts),
+    }).then((response) => {
+      if (!response.ok) throw new Error();
+      return true;
+    }).catch(() => {
+      $('error').textContent = 'Hesap adları kaydedilemedi. Program kapanmış olabilir.';
+      return false;
+    });
+  }
+
+  async function post(url, body) {
+    try {
+      const response = await fetch(url, { method: 'POST', body });
+      if (response.ok) return true;
+      const message = (await response.json()).error;
+      $('error').textContent = message;
+      return false;
+    } catch {
+      $('error').textContent = 'Sunucuya ulaşılamadı. Program kapanmış olabilir.';
+      return false;
+    }
+  }
+
+  async function send(live) {
+    if (!(await saveAccounts())) return;
+    const form = new FormData();
+    images.forEach(({ file }) => form.append('images', file));
+    form.append('caption', $('caption').value);
+    form.append('live', String(live));
+    selectedBoxes().forEach((box) => form.append('platforms', box.value));
+    ownLiveRun = (await post('/api/paylas', form)) && live;
+    refresh();
+  }
+
+  $('dry').onclick = () => { if (validate(false)) send(false); };
+
+  $('live').onclick = () => {
+    if (!validate(true)) return;
+    $('sumImages').replaceChildren(...images.map(({ url }, i) => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = `Görsel ${i + 1}`;
+      return img;
+    }));
+    const caption = $('caption').value.trim();
+    $('sumCaption').textContent = caption || 'Açıklama yok';
+    $('sumTargets').replaceChildren(...selectedBoxes().map((box) => {
+      const row = document.createElement('span');
+      const name = document.createElement('b');
+      name.textContent = box.dataset.name;
+      row.append(tile(box.value), name, ` · ${accountInput(box.value).value.trim()}`);
+      return row;
+    }));
+    $('confirm').showModal();
+  };
+  $('cancelShare').onclick = () => $('confirm').close();
+  $('confirmShare').onclick = () => {
+    $('confirm').close();
+    send(true);
+  };
+
+  $('copy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText('chrome://inspect/#remote-debugging');
+      $('copy').textContent = 'Kopyalandı';
+    } catch {
+      $('copy').textContent = 'Kopyalanamadı, elle yaz';
+    }
+  };
+
+  $('connect').onclick = async () => {
+    $('connect').disabled = true;
+    $('error').textContent = '';
+    $('connectMessage').textContent = 'Bağlanılıyor. Chrome izin sorarsa izin ver.';
+    await post('/api/baglan');
+    $('connectMessage').textContent = $('error').textContent;
+    $('error').textContent = '';
+    $('connect').disabled = false;
+    refresh();
+  };
+
+  function renderPlatforms(platforms, accounts) {
+    $('platforms').replaceChildren(...platforms.map(({ id, name, accountHint }) => {
+      const label = document.createElement('label');
+      label.className = 'platform';
+      const title = document.createElement('span');
+      title.className = 'name';
+      title.textContent = name;
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.className = 'switch';
+      box.checked = true;
+      box.value = id;
+      box.dataset.name = name;
+      const input = document.createElement('input');
+      input.className = 'account';
+      input.dataset.id = id;
+      input.value = accounts[id] ?? '';
+      input.placeholder = accountHint;
+      input.setAttribute('aria-label', `${name} hesabı`);
+      input.autocomplete = 'off';
+      input.onchange = () => { saveAccounts(); forceRender(); };
+      box.onchange = () => {
+        input.hidden = !box.checked;
+        updateShareLabel();
+      };
+      label.append(tile(id), title, box);
+      const row = document.createElement('div');
+      row.className = 'platform-row';
+      row.append(label, input);
+      return row;
+    }));
+    updateShareLabel();
+  }
+
+  function renderStatus(data) {
+    $('statusCard').hidden = !data.results.length;
+    $('statusTitle').textContent = data.live ? 'Paylaşım durumu' : 'Deneme durumu (paylaşılmıyor)';
+    $('status').replaceChildren(...data.results.map((result) => {
+      const li = document.createElement('li');
+      const body = document.createElement('div');
+      body.className = 'body';
+      const top = document.createElement('div');
+      top.className = 'top';
+      const tag = document.createElement('span');
+      tag.className = `tag ${result.status}`;
+      tag.textContent = LABELS[result.status] ?? result.status;
+      top.append(result.name, tag);
+      const message = document.createElement('div');
+      message.className = 'msg';
+      message.textContent = result.message;
+      body.append(top, message);
+      if (result.account) {
+        const found = document.createElement('div');
+        found.className = 'found';
+        found.textContent = `Açık hesap: ${result.account}`;
+        body.append(found);
+        const input = accountInput(result.id);
+        if (!data.running && input && normalizeAccount(input.value) !== normalizeAccount(result.account)) {
+          const save = document.createElement('button');
+          save.className = 'save-account';
+          save.textContent = 'Bu hesabı kaydet';
+          save.onclick = async () => {
+            input.value = result.account;
+            await saveAccounts();
+            forceRender();
+          };
+          body.append(save);
+        }
+      }
+      li.append(tile(result.id), body);
+      return li;
+    }));
+  }
+
+  // Tam başarılı paylaşımdan sonra formu boşaltır; aynı gönderi yanlışlıkla tekrar gitmesin.
+  function clearAfterSuccess(data) {
+    if (!ownLiveRun || data.running) return;
+    ownLiveRun = false;
+    if (!data.results.length || !data.results.every((result) => result.status === 'paylasildi')) return;
+    images.forEach(({ url }) => URL.revokeObjectURL(url));
+    images = [];
+    $('caption').value = '';
+    renderSlots();
+    updateLimits();
+  }
+
+  function forceRender() {
+    lastData = '';
+    refresh();
+  }
+
+  async function refresh() {
+    let raw;
+    try {
+      raw = await (await fetch('/api/durum')).text();
+    } catch {
+      return;
+    }
+    if (raw === lastData) return;
+    lastData = raw;
+    const data = JSON.parse(raw);
+    running = data.running;
+    if (!platformsReady) {
+      platformsReady = true;
+      renderPlatforms(data.platforms, data.accounts);
+    }
+    ['live', 'dry'].forEach((id) => { $(id).disabled = running; });
+    $('setup').hidden = data.connected;
+    $('pill').classList.toggle('on', data.connected);
+    $('pill').textContent = data.connected ? 'Chrome\'a bağlı' : 'Chrome\'a bağlı değil';
+    renderStatus(data);
+    clearAfterSuccess(data);
+  }
+
+  renderSlots();
+  refresh();
+  setInterval(refresh, 1000);
+</script>
+</body>
+</html>

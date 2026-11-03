@@ -1,0 +1,16 @@
+# Sanal ortam
+.venv/
+
+# Çalışma verileri: hesap adları, hata ekran görüntüleri ve geçici görseller
+data/
+
+# Python
+__pycache__/
+*.pyc
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+
+# Oluşturulan paketler
+dist/

@@ -1,0 +1,52 @@
+SOSYAL MEDYA ÇOKLU KONTROL
+Tek ekrandan Instagram, Facebook, NSosyal ve X'e gönderi hazırlar ve paylaşır.
+Hesaplarına açık Chrome'un üzerinden erişir. Şifreni sormaz ve saklamaz.
+
+
+KURULUM
+1. Google Chrome ve Python kurulu olsun.
+2. Bu klasörü Masaüstü gibi kalıcı bir yere çıkar. Zip'in içinden çalıştırma.
+3. Çift tıkla:
+   Windows: baslat.bat
+   Mac: baslat.command
+
+İlk açılış bir iki dakika sürebilir ve internet gerekir. Sonra site Chrome'da kendiliğinden açılır.
+Açılan siyah pencere programın kendisidir, kullanırken kapatma.
+
+Windows "bilgisayarınızı korudu" derse: Ek bilgi > Yine de çalıştır.
+Mac engellerse: Sistem Ayarları > Gizlilik ve Güvenlik > Yine de Aç.
+
+
+CHROME'A BAĞLANMAK
+1. Chrome'da şu adresi aç: chrome://inspect/#remote-debugging
+2. "Allow remote debugging for this browser instance" kutusunu işaretle.
+3. Sitede "Chrome'a bağlan" düğmesine bas, Chrome izin sorarsa "İzin ver" de.
+Program her yeniden açıldığında izni tekrar sorabilir.
+
+
+İLK KULLANIM
+1. Instagram, Facebook, NSosyal ve X'e Chrome'dan, paylaşım yapılacak hesapla giriş yap.
+2. Bir görsel ekle ve "Dene"ye bas. HİÇBİR ŞEY PAYLAŞILMAZ.
+3. Durum bölümünde görünen hesap doğruysa "Bu hesabı kaydet"e bas. Bu bir kez yeterli.
+4. Açılan sekmeleri Paylaş'a basmadan kapat.
+
+
+PAYLAŞMAK
+Görselleri ekle (en fazla 4), açıklamayı yaz, platformları seç.
+"yerde paylaş" düğmesine bas ve çıkan özeti onayla.
+Paylaşılan sekme 30 saniye sonra kapanır. Sorun olan sekme açık kalır.
+
+
+DİKKAT
+- Gerçek paylaşımı ilk kez tek platformla ve önemsiz bir gönderiyle dene.
+- Açık hesap kaydettiğin hesapla eşleşmezse o platformda paylaşım yapılmaz.
+- Facebook'ta bir Sayfa adına paylaşacaksan önce Chrome'da o Sayfa'ya geç.
+- "Kontrol et" yazıyorsa düğmeye basılmış ama sonuç doğrulanamamıştır. Tekrar paylaşmadan
+  önce gönderinin çıkıp çıkmadığına bak, yoksa aynı gönderi iki kez çıkabilir.
+- Instagram'da "Şurada paylaş > Facebook" seçeneği kapalı kalsın, yoksa gönderi iki kez çıkar.
+- Platformların kuralları bu tür otomasyonu kısıtlayabilir, X'te hesap askıya alınabilir.
+  Önemli hesaplarda bu riski bilerek kullan.
+- Chrome'daki kutu açıkken bilgisayardaki programlar Chrome'a bağlanmak için izin isteyebilir.
+  Beklemediğin bir izin penceresini onaylama. Ortak bilgisayarda işin bitince kutuyu kapat.
+- Hatalı denemelerin ekran görüntüleri "data\hatalar" klasörüne kaydedilir. Bunları yalnızca
+  güvendiğin kişilerle paylaş.
