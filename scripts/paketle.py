@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
 FOLDER = "SosyalMedyaCokluKontrol"
-COMMON = ["KULLANIM.txt", "README.md", "requirements.txt", "docs/ekran-goruntusu.png"]
+COMMON = ["KULLANIM.txt", "LICENSE", "README.md", "requirements.txt", "docs/ekran-goruntusu.png"]
 LAUNCHERS = {"Windows": "baslat.bat", "Mac": "baslat.command"}
 
 

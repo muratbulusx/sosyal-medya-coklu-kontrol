@@ -86,6 +86,7 @@ sosyal-medya-coklu-kontrol/
 ├── baslat.bat            Windows başlatıcısı
 ├── baslat.command        macOS başlatıcısı
 ├── KULLANIM.txt          Kısa kullanım notu
+├── LICENSE               MIT lisansı
 ├── requirements.txt      Python bağımlılıkları
 ├── app/
 │   ├── __main__.py       Başlangıç noktası
@@ -160,3 +161,7 @@ Paket oluşturma, çıktıları `dist/` klasörüne yazar:
 ```bash
 .venv/bin/python scripts/paketle.py
 ```
+
+## Lisans
+
+[MIT](LICENSE). Yazılım herhangi bir garanti olmadan sunulur.
