@@ -2,6 +2,8 @@ SOSYAL MEDYA ÇOKLU KONTROL
 Tek ekrandan Instagram, Facebook, NSosyal ve X'e gönderi hazırlar ve paylaşır.
 Hesaplarına açık Chrome'un üzerinden erişir. Şifreni sormaz ve saklamaz.
 
+Other languages: README.md (English), docs/README.*.md
+
 
 KURULUM
 1. Google Chrome ve Python kurulu olsun.

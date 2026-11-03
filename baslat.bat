@@ -18,6 +18,7 @@ if not defined PY python3 -c "%VERSION_CHECK%" >nul 2>nul && set "PY=python3"
 if not defined PY goto nopython
 
 echo Ilk acilis: hazirlik yapiliyor, bir iki dakika surebilir...
+echo First launch: setting up, this may take a minute or two...
 %PY% -m venv .venv
 if errorlevel 1 goto venvfail
 
@@ -25,6 +26,7 @@ if errorlevel 1 goto venvfail
 fc /b requirements.txt .venv\kurulu.txt >nul 2>nul
 if not errorlevel 1 goto run
 echo Gerekli parcalar yukleniyor...
+echo Installing required packages...
 "%VENV_PY%" -m pip install --disable-pip-version-check -q -r requirements.txt
 if errorlevel 1 goto pipfail
 copy /y requirements.txt .venv\kurulu.txt >nul
@@ -38,21 +40,30 @@ exit /b 0
 echo.
 echo Python 3.10 veya daha yenisi bulunamadi.
 echo https://www.python.org adresinden kurarken "Add python.exe to PATH" kutusunu isaretle, sonra tekrar dene.
+echo.
+echo Python 3.10 or newer was not found.
+echo Install it from https://www.python.org and tick "Add python.exe to PATH", then try again.
 goto stop
 
 :venvfail
 echo.
 echo Python ortami olusturulamadi. Klasoru Masaustu gibi normal bir yere cikardigindan emin ol.
+echo.
+echo Could not create the Python environment. Make sure the folder is extracted to a normal place such as the Desktop.
 goto stop
 
 :pipfail
 echo.
 echo Yukleme basarisiz oldu. Internet baglantisini kontrol edip tekrar dene.
+echo.
+echo Installation failed. Check your internet connection and try again.
 goto stop
 
 :appfail
 echo.
 echo Program beklenmedik sekilde kapandi. Yukaridaki mesaji kontrol et.
+echo.
+echo The program closed unexpectedly. Check the message above.
 
 :stop
 echo.

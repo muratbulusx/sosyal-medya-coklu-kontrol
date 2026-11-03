@@ -3,6 +3,9 @@ ve sahte siteler kullanır, kullanıcının kendi Chrome'una bağlanmaz."""
 
 import base64
 import io
+import json
+import logging
+import re
 import shutil
 import socket
 import tempfile
@@ -10,12 +13,14 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from playwright.sync_api import sync_playwright
 from werkzeug.serving import make_server
 
 from app.__main__ import windows_chrome_paths
 from app.engine import CONNECT_HELP, Engine, normalize_account
+from app.messages import Problem, message
 from app.platforms import create_platforms
 from app.server import create_app
 from tests.fake_sites import FakeSites
@@ -26,6 +31,7 @@ PNG = base64.b64decode(
 ACCOUNTS = {"x": "resmi_x", "instagram": "resmi_ig", "facebook": "Resmi Sayfa", "nsosyal": "Resmi NSosyal"}
 CAPTION = "Merhaba dünya\nİkinci satır"
 ROOT = Path(__file__).resolve().parent.parent
+LANGUAGES = ["en", "tr", "es", "pt", "fr", "de", "ru", "ar", "zh", "ja"]
 
 
 def free_port():
@@ -233,7 +239,9 @@ class EngineTests(Base):
         result = next(r for r in engine.state["results"] if r["id"] == "x")
         self.assertEqual(result["account"], "resmi_x")
         self.assertFalse(result["accountOk"])
-        self.assertRegex(result["message"], r"Yanlış hesap açık.*resmi_x.*resmi_x2")
+        self.assertEqual(
+            result["message"], message("run.failed", detail=message("error.wrongAccount", account="resmi_x", expected="resmi_x2"))
+        )
 
         async def attached_files():
             context = await engine.get_context()
@@ -252,7 +260,7 @@ class EngineTests(Base):
         engine = self.engine_with([blind])
         self.run_job(engine, ["x"], True)
         self.assertEqual(engine.state["results"][0]["status"], "hata")
-        self.assertIn("okunamadı", engine.state["results"][0]["message"])
+        self.assertEqual(engine.state["results"][0]["message"]["params"]["detail"], message("error.accountUnreadable"))
         self.assertEqual(self.sites.posts, [])
 
     def test_live_refuses_without_saved_accounts(self):
@@ -263,8 +271,9 @@ class EngineTests(Base):
             self.real_platforms(), self.dir / "hatalar", {"x": "resmi_x", "instagram": "  "}, connect=must_not_connect
         )
         self.engines.append(engine)
-        with self.assertRaisesRegex(ValueError, "Önce paylaşılacak hesabı yaz: Instagram, Facebook"):
+        with self.assertRaises(Problem) as caught:
             engine.start(self.job(), ["x", "instagram", "facebook"], True)
+        self.assertEqual(caught.exception.message, message("error.missingAccount", names="Instagram, Facebook"))
         self.assertFalse(engine.state["running"])
         self.assertEqual(self.sites.posts, [])
 
@@ -367,6 +376,168 @@ class ServerTests(unittest.TestCase):
                                    environ_overrides={"SERVER_PORT": str(self.port)})
         self.assertIn("Sosyal Medya Çoklu Kontrol", response.get_data(as_text=True))
         response.close()
+
+
+def strings(code):
+    return json.loads((ROOT / "app" / "static" / "i18n" / f"{code}.json").read_text(encoding="utf-8"))
+
+
+class TranslationTests(unittest.TestCase):
+    def test_every_language_has_the_same_keys_and_placeholders(self):
+        english = strings("en")
+        placeholders = lambda text: sorted(re.findall(r"\{(\w+)\}", text))
+        for code in LANGUAGES:
+            catalog = strings(code)
+            self.assertEqual(set(catalog), set(english), code)
+            for key, text in catalog.items():
+                self.assertTrue(text.strip(), f"{code} {key}")
+                self.assertEqual(placeholders(text), placeholders(english[key]), f"{code} {key}")
+                self.assertEqual(text.count("<b>"), english[key].count("<b>"), f"{code} {key}")
+                self.assertEqual(text.count("<"), 2 * text.count("<b>"), f"{code} {key}")
+
+    def test_page_offers_exactly_the_translated_languages(self):
+        html = (ROOT / "app" / "static" / "index.html").read_text(encoding="utf-8")
+        offered = re.search(r"const LANGUAGES = \{(.*?)\};", html).group(1)
+        self.assertEqual(re.findall(r"(\w+): '", offered), LANGUAGES)
+        self.assertEqual(sorted(p.stem for p in (ROOT / "app" / "static" / "i18n").glob("*.json")), sorted(LANGUAGES))
+
+    def test_code_and_translations_use_the_same_keys(self):
+        sources = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "app").glob("*.py"))
+        html = (ROOT / "app" / "static" / "index.html").read_text(encoding="utf-8")
+        used = set(re.findall(r'"((?:error|run|account)\.\w+)"', sources))
+        used |= set(re.findall(r"data-i18n[\w-]*=\"([\w.]+)\"", html))
+        used |= set(re.findall(r"'((?:chrome|connect|images|image|caption|share|confirm|status|account|error)\.\w+)'", html))
+        keys = set(strings("en"))
+        self.assertEqual(used - keys, set(), "çevirisi olmayan anahtar")
+        self.assertEqual({key for key in keys - used if not key.startswith("state.")}, set(), "kullanılmayan çeviri")
+
+    def test_readme_translations_match_the_english_one(self):
+        def shape(text):
+            lines = text.split("\n")
+            return {
+                "headings": [line.split(" ")[0] for line in lines if line.startswith("#")],
+                "rows": sum(line.startswith("|") for line in lines),
+                "bullets": sum(line.startswith("- ") for line in lines),
+                "commands": re.findall(r"```bash\n(.*?)```", text, re.S),
+            }
+
+        english = (ROOT / "README.md").read_text(encoding="utf-8")
+        for code in LANGUAGES[1:]:
+            path = ROOT / "docs" / f"README.{code}.md"
+            text = path.read_text(encoding="utf-8")
+            self.assertEqual(shape(text), shape(english), code)
+            for link in re.findall(r"\]\(([^)#]+)\)", text):
+                if not link.startswith("http"):
+                    self.assertTrue((path.parent / link).exists(), f"{code} {link}")
+            self.assertTrue((ROOT / "docs" / "ekran" / f"{code}.png").exists(), code)
+
+
+class PageLanguageTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
+        cls.dir = Path(tempfile.mkdtemp(prefix="smck-dil-"))
+        failed = message("run.failed", detail=message("error.wrongAccount", account="resmi_x", expected="diger_x"))
+        engine = SimpleNamespace(
+            state={
+                "running": False,
+                "live": False,
+                "connected": False,
+                "results": [
+                    {"id": "x", "name": "X", "status": "hata", "message": failed, "account": "resmi_x", "accountOk": False},
+                    {
+                        "id": "facebook",
+                        "name": "Facebook",
+                        "status": "hata",
+                        "message": message("run.failed", detail="Timeout 20000ms exceeded."),
+                        "account": None,
+                        "accountOk": False,
+                    },
+                ],
+            },
+            accounts={"x": "diger_x"},
+            platforms=[
+                SimpleNamespace(id="x", name="X", account_hint="account.hintUsername"),
+                SimpleNamespace(id="facebook", name="Facebook", account_hint="account.hintPage"),
+            ],
+        )
+        cls.port = free_port()
+        cls.server = make_server("127.0.0.1", cls.port, create_app(engine, cls.dir / "gecici"), threaded=True)
+        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        cls.playwright = sync_playwright().start()
+        cls.browser = cls.playwright.chromium.launch(channel="chrome", headless=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.playwright.stop()
+        cls.server.shutdown()
+        cls.server.server_close()
+        shutil.rmtree(cls.dir, ignore_errors=True)
+
+    def open_page(self, locale):
+        context = self.browser.new_context(locale=locale)
+        self.addCleanup(context.close)
+        page = context.new_page()
+        page.goto(f"http://127.0.0.1:{self.port}")
+        page.wait_for_selector("#status li")
+        return page
+
+    def test_every_language_translates_the_whole_page(self):
+        for code in LANGUAGES:
+            with self.subTest(code):
+                catalog = strings(code)
+                page = self.open_page(code)
+                self.assertEqual(page.locator("html").get_attribute("lang"), code)
+                self.assertEqual(page.locator("html").get_attribute("dir"), "rtl" if code == "ar" else "ltr")
+                self.assertEqual(page.locator("#language").input_value(), code)
+                self.assertEqual(page.locator("#pill").inner_text().strip(), catalog["chrome.disconnected"])
+                self.assertEqual(page.locator("#dry").inner_text().strip(), catalog["share.dry"])
+                live = page.locator("#live").inner_text().strip().replace("\u2068", "").replace("\u2069", "")
+                self.assertEqual(live, catalog["share.count"].replace("{count}", "2"))
+                body = page.locator("body").inner_text()
+                self.assertIn(catalog["state.hata"], body)
+                self.assertIn(catalog["connect.title"], body)
+                self.assertIn("resmi_x", body)
+                self.assertIn("Timeout 20000ms exceeded.", body)
+                self.assertEqual(
+                    re.findall(r"\b(?:chrome|connect|images?|caption|share|confirm|status|state|account|error|run|lang)\.[a-zA-Z]+", body), []
+                )
+                placeholder = page.locator('.account[data-id="facebook"]').get_attribute("placeholder")
+                self.assertEqual(placeholder, catalog["account.hintPage"])
+
+    def test_unknown_browser_language_falls_back_to_english(self):
+        page = self.open_page("ko-KR")
+        self.assertEqual(page.locator("#language").input_value(), "en")
+
+    def test_regional_browser_language_uses_the_base_language(self):
+        page = self.open_page("pt-BR")
+        self.assertEqual(page.locator("#language").input_value(), "pt")
+
+    def test_changing_language_retranslates_and_is_remembered(self):
+        page = self.open_page("tr-TR")
+        self.assertEqual(page.locator("#language").input_value(), "tr")
+        page.select_option("#language", "de")
+        page.wait_for_function("document.documentElement.lang === 'de'")
+        page.wait_for_function("document.getElementById('statusTitle').textContent === %s" % json.dumps(strings("de")["status.dry"]))
+        self.assertIn(strings("de")["state.hata"], page.locator("#status").inner_text())
+        page.reload()
+        page.wait_for_selector("#status li")
+        self.assertEqual(page.locator("#language").input_value(), "de")
+
+    def test_image_controls_follow_reading_direction(self):
+        image = self.dir / "a.png"
+        image.write_bytes(PNG)
+        for code, earlier, later in (("en", "←", "→"), ("ar", "→", "←")):
+            with self.subTest(code):
+                page = self.open_page(code)
+                page.set_input_files("#images", [str(image), str(image)])
+                self.assertEqual(page.locator(".tool.later").inner_text(), later)
+                self.assertEqual(page.locator(".tool.earlier").inner_text(), earlier)
+                first, second = page.locator(".slot.filled").all()[:2]
+                first_left = first.bounding_box()["x"]
+                second_left = second.bounding_box()["x"]
+                self.assertEqual(first_left > second_left, code == "ar")
 
 
 class SmallTests(unittest.TestCase):

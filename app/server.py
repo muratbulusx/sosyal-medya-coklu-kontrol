@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from .engine import CONNECT_HELP, first_line
+from .messages import Problem, message
 
 EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 MAX_IMAGES = 4
@@ -29,15 +30,19 @@ def create_app(engine, temp_dir, save_accounts=lambda accounts: None):
         host_ok = host in (f"127.0.0.1:{port}", f"localhost:{port}")
         origin_ok = request.method == "GET" or request.headers.get("Origin") == f"http://{host}"
         if not host_ok or not origin_ok:
-            return jsonify(error="İzin verilmeyen istek"), 403
+            return jsonify(error=message("error.forbidden")), 403
         return None
 
     def busy():
-        return jsonify(error="Devam eden bir paylaşım var"), 409
+        return jsonify(error=message("error.busy")), 409
 
     @app.get("/")
     def index():
         return send_from_directory(STATIC_DIR, "index.html")
+
+    @app.get("/i18n/<code>.json")
+    def strings(code):
+        return send_from_directory(STATIC_DIR / "i18n", f"{code}.json")
 
     @app.get("/api/durum")
     def status():
@@ -61,7 +66,8 @@ def create_app(engine, temp_dir, save_accounts=lambda accounts: None):
         try:
             save_accounts(engine.accounts)
         except OSError as error:
-            return jsonify(error=f"Hesaplar kaydedilemedi: {error}"), 500
+            print(f"Hesaplar kaydedilemedi: {error}", flush=True)
+            return jsonify(error=message("error.saveAccounts")), 500
         return jsonify(ok=True)
 
     @app.post("/api/paylas")
@@ -70,11 +76,11 @@ def create_app(engine, temp_dir, save_accounts=lambda accounts: None):
             return busy()
         images = request.files.getlist("images")
         if not images:
-            return jsonify(error="En az bir görsel ekle"), 400
+            return jsonify(error=message("error.noImage")), 400
         if len(images) > MAX_IMAGES:
-            return jsonify(error=f"En fazla {MAX_IMAGES} görsel eklenebilir"), 400
+            return jsonify(error=message("error.tooManyImages", max=MAX_IMAGES)), 400
         if any(image.mimetype not in EXTENSIONS for image in images):
-            return jsonify(error="Yalnızca JPEG, PNG veya WebP yüklenebilir"), 400
+            return jsonify(error=message("error.badImageType")), 400
 
         # Tarayıcı dosyayı paylaşım anında okuyabilir; bu yüzden önceki işin
         # dosyaları ancak yeni iş başlarken silinir.
@@ -93,8 +99,8 @@ def create_app(engine, temp_dir, save_accounts=lambda accounts: None):
                 request.form.getlist("platforms"),
                 request.form.get("live") == "true",
             )
-        except ValueError as error:
-            return jsonify(error=str(error)), 400
+        except Problem as error:
+            return jsonify(error=error.message), 400
         return jsonify(ok=True), 202
 
     @app.post("/api/baglan")
@@ -108,6 +114,6 @@ def create_app(engine, temp_dir, save_accounts=lambda accounts: None):
 
     @app.errorhandler(RequestEntityTooLarge)
     def too_large(_):
-        return jsonify(error="Görseller çok büyük. Görsel başına en fazla 30 MB olmalı."), 413
+        return jsonify(error=message("error.tooLarge")), 413
 
     return app

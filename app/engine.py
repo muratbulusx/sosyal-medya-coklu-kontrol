@@ -12,11 +12,9 @@ from pathlib import Path
 
 from playwright.async_api import async_playwright
 
-CONNECT_HELP = (
-    "Chrome'a bağlanılamadı. Chrome açık olmalı. Adres çubuğuna chrome://inspect/#remote-debugging yaz, "
-    '"Allow remote debugging for this browser instance" kutusunu işaretle, sonra tekrar dene ve çıkan '
-    "pencerede izin ver."
-)
+from .messages import Problem, message
+
+CONNECT_HELP = message("error.connect")
 
 
 def normalize_account(name):
@@ -156,7 +154,7 @@ class Engine:
         waiting_for_login = False
         while True:
             if page.is_closed():
-                raise RuntimeError("Sekme kapatıldı")
+                raise Problem("error.tabClosed")
             if await platform.is_ready(page):
                 return
             logged_out = await platform.is_logged_out(page)
@@ -164,16 +162,16 @@ class Engine:
                 waiting_for_login = True
                 deadline = time.monotonic() + self._login_timeout
                 result["status"] = "giris-bekleniyor"
-                result["message"] = "Oturum kapalı. Açılan sekmede giriş yap, sonra kendiliğinden devam eder."
+                result["message"] = message("run.loginNeeded")
                 await page.bring_to_front()
             elif not logged_out and waiting_for_login:
                 waiting_for_login = False
                 deadline = time.monotonic() + self._unknown_page_timeout
                 result["status"] = "calisiyor"
-                result["message"] = "Giriş yapıldı, devam ediliyor."
+                result["message"] = message("run.loggedIn")
                 await page.goto(platform.url, wait_until="domcontentloaded", timeout=60_000)
             if time.monotonic() > deadline:
-                raise RuntimeError("Giriş için süre doldu" if waiting_for_login else "Paylaşım ekranı bulunamadı")
+                raise Problem("error.loginTimeout" if waiting_for_login else "error.noComposer")
             await asyncio.sleep(self._poll)
 
     async def _read_account(self, page, platform):
@@ -197,53 +195,52 @@ class Engine:
         if result["accountOk"]:
             return
         if result["account"] and expected:
-            raise RuntimeError(f'Yanlış hesap açık: "{result["account"]}". Beklenen: "{expected}"')
+            raise Problem("error.wrongAccount", account=result["account"], expected=expected)
         if not result["account"] and live:
-            raise RuntimeError("Açık hesap okunamadı, güvenlik için durduruldu. Pencereyi büyütüp tekrar dene")
+            raise Problem("error.accountUnreadable")
 
     async def _run_one(self, context, platform, job, result, live):
         page = None
         try:
             result["status"] = "calisiyor"
-            result["message"] = "Sekme açılıyor."
+            result["message"] = message("run.opening")
             page = await context.new_page()
             await page.goto(platform.url, wait_until="domcontentloaded", timeout=60_000)
             await self._wait_until_ready(page, platform, result)
 
             result["status"] = "calisiyor"
-            result["message"] = "Açık hesap kontrol ediliyor."
+            result["message"] = message("run.checkingAccount")
             await self._check_account(page, platform, result, live)
 
-            result["message"] = "Görseller ve açıklama ekleniyor."
+            result["message"] = message("run.preparing")
             await page.bring_to_front()
             await platform.prepare(page, job["files"], job["caption"])
             if not live:
                 result["status"] = "hazir"
                 if result["accountOk"]:
-                    result["message"] = "Hazır, paylaşılmadı. Sekme açık kaldı."
+                    result["message"] = message("run.readyOk")
                 elif result["account"]:
-                    result["message"] = "Hazır, paylaşılmadı. Paylaşmak için bu hesabı doğruysa kaydet."
+                    result["message"] = message("run.readySaveAccount")
                 else:
-                    result["message"] = "Hazır, paylaşılmadı. Ama açık hesap okunamadı, gerçek paylaşım durur."
+                    result["message"] = message("run.readyNoAccount")
                 return
 
-            result["message"] = "Paylaş düğmesine basılıyor."
+            result["message"] = message("run.clicking")
             await platform.share(page)
-            result["message"] = "Sonuç bekleniyor."
+            result["message"] = message("run.waiting")
             if await platform.confirm(page):
                 result["status"] = "paylasildi"
-                result["message"] = "Paylaşıldı."
+                result["message"] = message("run.shared")
                 self._close_later(page)
             else:
                 # Paylaşılmış olabilir: yinelenen gönderi olmasın diye tekrar denemiyoruz.
                 result["status"] = "kontrol-et"
-                result["message"] = (
-                    "Düğmeye basıldı ama sonuç doğrulanamadı. Sekmeyi kontrol et, tekrar paylaşmadan önce bak."
-                )
+                result["message"] = message("run.unverified")
                 await self._save_screenshot(page, platform)
         except Exception as error:
             result["status"] = "hata"
-            result["message"] = f"Paylaşılmadı: {first_line(error)}"
+            detail = error.message if isinstance(error, Problem) else first_line(error)
+            result["message"] = message("run.failed", detail=detail)
             if page:
                 await self._save_screenshot(page, platform)
 
@@ -264,17 +261,17 @@ class Engine:
 
     def start(self, job, platform_ids, live):
         if self.state["running"]:
-            raise ValueError("Devam eden bir paylaşım var")
+            raise Problem("error.busy")
         selected = [p for p in self.platforms if p.id in platform_ids]
         if not selected:
-            raise ValueError("En az bir platform seç")
+            raise Problem("error.noPlatform")
         missing = [p.name for p in selected if not (self.accounts.get(p.id) or "").strip()]
         if live and missing:
-            raise ValueError(f"Önce paylaşılacak hesabı yaz: {', '.join(missing)}")
+            raise Problem("error.missingAccount", names=", ".join(missing))
         self.state["running"] = True
         self.state["live"] = live
         self.state["results"] = [
-            {"id": p.id, "name": p.name, "status": "bekliyor", "message": "", "account": None, "accountOk": False}
+            {"id": p.id, "name": p.name, "status": "bekliyor", "message": None, "account": None, "accountOk": False}
             for p in selected
         ]
         self._finished = asyncio.run_coroutine_threadsafe(self._run(job, selected, live), self._loop)

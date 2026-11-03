@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from playwright.async_api import Error as PlaywrightError
 
+from .messages import Problem
+
 STEP_TIMEOUT = 20_000
 UPLOAD_TIMEOUT = 120_000
 CONFIRM_TIMEOUT = 120_000
@@ -69,13 +71,13 @@ async def type_caption(page, box, caption):
     first_line = next(line for line in lines if line.strip()).strip()
     written = await box.evaluate("el => el.value ?? el.innerText")
     if first_line not in written:
-        raise RuntimeError("Açıklama metin alanına yazılamadı")
+        raise Problem("error.captionFailed")
 
 
 class X:
     id = "x"
     name = "X"
-    account_hint = "Kullanıcı adı, ör. kullanici_adi"
+    account_hint = "account.hintUsername"
 
     def __init__(self, url="https://x.com/compose/post"):
         self.url = url
@@ -120,7 +122,7 @@ class X:
 class Instagram:
     id = "instagram"
     name = "Instagram"
-    account_hint = "Kullanıcı adı, ör. kullanici_adi"
+    account_hint = "account.hintUsername"
 
     def __init__(self, url="https://www.instagram.com/"):
         self.url = url
@@ -202,7 +204,7 @@ class Instagram:
 class Facebook:
     id = "facebook"
     name = "Facebook"
-    account_hint = "Görünen ad, ör. Sayfa Adı"
+    account_hint = "account.hintPage"
 
     def __init__(self, url="https://www.facebook.com/"):
         self.url = url
@@ -265,7 +267,7 @@ class Facebook:
 class NSosyal:
     id = "nsosyal"
     name = "NSosyal"
-    account_hint = "Görünen ad, ör. Hesap Adı"
+    account_hint = "account.hintName"
 
     def __init__(self, url="https://nsosyal.com/"):
         self.url = url

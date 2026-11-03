@@ -11,14 +11,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
 FOLDER = "SosyalMedyaCokluKontrol"
-COMMON = ["KULLANIM.txt", "LICENSE", "README.md", "requirements.txt", "docs/ekran-goruntusu.png"]
+COMMON = ["KULLANIM.txt", "LICENSE", "README.md", "requirements.txt"]
 LAUNCHERS = {"Windows": "baslat.bat", "Mac": "baslat.command"}
 
 
-def app_files():
+def packaged_files():
     return sorted(
         path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "app").rglob("*")
+        for folder in ("app", "docs")
+        for path in (ROOT / folder).rglob("*")
         if path.is_file() and "__pycache__" not in path.parts
     )
 
@@ -41,7 +42,7 @@ def main():
         target = DIST / f"{FOLDER}-{system}.zip"
         with zipfile.ZipFile(target, "w") as archive:
             add(archive, launcher, executable=True)
-            for relative in COMMON + app_files():
+            for relative in COMMON + packaged_files():
                 add(archive, relative)
         print(f"{target.name}: {target.stat().st_size // 1024} KB")
 

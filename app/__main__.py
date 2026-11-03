@@ -72,7 +72,7 @@ def main():
 
     # İkinci kez çift tıklanırsa yeni kopya başlatmak yerine açık olanı gösterir.
     if already_running(args.port):
-        print(f"Program zaten açık: {url}")
+        print(f"Program zaten açık / Already running: {url}")
         if not args.no_browser:
             open_in_chrome(url)
         return
@@ -99,12 +99,12 @@ def main():
     try:
         server = make_server("127.0.0.1", args.port, app, threaded=True)
     except (OSError, SystemExit):
-        print(f"{args.port} numaralı port başka bir program tarafından kullanılıyor.")
+        print(f"{args.port} numaralı port kullanımda / Port {args.port} is already in use.")
         sys.exit(1)
 
     shutil.rmtree(temp_dir, ignore_errors=True)
-    print(f"Sosyal Medya Çoklu Kontrol hazır: {url}")
-    print("Kullanırken bu pencereyi kapatma. Kapatınca program durur.", flush=True)
+    print(f"Sosyal Medya Çoklu Kontrol hazır / ready: {url}")
+    print("Kullanırken bu pencereyi kapatma. / Keep this window open while using the program.", flush=True)
     if not args.no_browser:
         threading.Timer(0.5, open_in_chrome, [url]).start()
     try:
