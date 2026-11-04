@@ -52,6 +52,8 @@ Chrome may ask for permission again each time the program is reopened.
 2. Add an image and press **Try**. Nothing is shared.
 3. If the account shown in the status section is right, press **Save this account**.
 
+The saved name must match what the site shows. Instagram and X use the username. Facebook and NSosyal use the display name, such as the full Page name. If the names differ, the program stops on that platform without sharing. **Save this account** enters the right name for you.
+
 To share as a Facebook Page, switch to that Page in Chrome first.
 
 ### 3. Share
@@ -110,9 +112,9 @@ If a platform changes its interface, `app/platforms.py` is the file to fix.
 ## Security and privacy
 
 - The site can only be reached from this computer (`127.0.0.1`). Requests from other sites are rejected.
-- Passwords, cookies and session data are neither read nor stored. Account names are the only thing saved.
+- Passwords, cookies and session data are neither read nor stored. The program saves only account names and the error records in `data/hatalar`.
 - While Chrome's remote debugging box is ticked, programs on the computer may ask for permission to connect to Chrome. Don't approve a permission window you weren't expecting. On a shared computer, untick the box when you're done.
-- Screenshots in the `data/hatalar` folder can contain account content. Share them only with people you trust.
+- Screenshots and the `kayit.txt` log in the `data/hatalar` folder can contain account names and account content. Share them only with people you trust.
 
 ## Known limits and risks
 
@@ -126,6 +128,7 @@ If a platform changes its interface, `app/platforms.py` is the file to fix.
 - The computer and Chrome must stay on while the program is working.
 - Limits per image vary by platform. JPEG, PNG and WebP are supported, video isn't.
 - Keep Instagram's "Share to → Facebook" option off, or the post will appear twice on Facebook.
+- After a partly failed share, turn off the platforms that already shared before pressing **Share** again, or the post will appear twice on them.
 
 ### Test status
 
@@ -133,9 +136,9 @@ If a platform changes its interface, `app/platforms.py` is the file to fix.
 |---|---|
 | Automated tests (with fake sites), including all 10 interface languages | Passing |
 | Preparation, multiple images and account check on the real sites (macOS, Turkish-language sites) | Tried in Try mode |
-| Pressing Share on the real sites | **Not tried yet** |
+| Pressing Share on the real sites | Worked in one real test on Windows |
 | Reading the account in Facebook Page mode | **Not tried yet** |
-| Running on Windows | **Not tried yet** |
+| Running on Windows | Worked in one real test |
 
 Make your first real share on one platform, with an unimportant post.
 

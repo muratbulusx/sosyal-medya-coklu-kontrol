@@ -30,6 +30,8 @@ Program her yeniden açıldığında izni tekrar sorabilir.
 1. Instagram, Facebook, NSosyal ve X'e Chrome'dan, paylaşım yapılacak hesapla giriş yap.
 2. Bir görsel ekle ve "Dene"ye bas. HİÇBİR ŞEY PAYLAŞILMAZ.
 3. Durum bölümünde görünen hesap doğruysa "Bu hesabı kaydet"e bas. Bu bir kez yeterli.
+   Ad sitede görünenle aynı olmalı: Instagram ve X kullanıcı adını, Facebook ve NSosyal
+   görünen adı (örneğin Sayfa'nın tam adını) kullanır. Adlar farklıysa o platformda paylaşılmaz.
 4. Açılan sekmeleri Paylaş'a basmadan kapat.
 
 
@@ -46,9 +48,11 @@ DİKKAT
 - "Kontrol et" yazıyorsa düğmeye basılmış ama sonuç doğrulanamamıştır. Tekrar paylaşmadan
   önce gönderinin çıkıp çıkmadığına bak, yoksa aynı gönderi iki kez çıkabilir.
 - Instagram'da "Şurada paylaş > Facebook" seçeneği kapalı kalsın, yoksa gönderi iki kez çıkar.
+- Paylaşım bazı platformlarda başarısız olduysa, tekrar basmadan önce paylaşımın tamamlandığı
+  platformları kapat. Yoksa gönderi onlarda iki kez çıkar.
 - Platformların kuralları bu tür otomasyonu kısıtlayabilir, X'te hesap askıya alınabilir.
   Önemli hesaplarda bu riski bilerek kullan.
 - Chrome'daki kutu açıkken bilgisayardaki programlar Chrome'a bağlanmak için izin isteyebilir.
   Beklemediğin bir izin penceresini onaylama. Ortak bilgisayarda işin bitince kutuyu kapat.
-- Hatalı denemelerin ekran görüntüleri "data\hatalar" klasörüne kaydedilir. Bunları yalnızca
-  güvendiğin kişilerle paylaş.
+- Hatalı denemelerin ekran görüntüleri ve "kayit.txt" dosyası "data\hatalar" klasörüne kaydedilir.
+  Bunları yalnızca güvendiğin kişilerle paylaş.

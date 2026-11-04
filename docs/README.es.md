@@ -52,6 +52,8 @@ Chrome puede volver a pedir permiso cada vez que se reabre el programa.
 2. Añade una imagen y pulsa **Probar**. No se publica nada.
 3. Si la cuenta que aparece en la sección de estado es la correcta, pulsa **Guardar esta cuenta**.
 
+El nombre guardado debe coincidir con el que muestra el sitio. Instagram y X usan el nombre de usuario. Facebook y NSosyal usan el nombre visible, como el nombre completo de la página. Si los nombres no coinciden, el programa se detiene en esa plataforma sin publicar. **Guardar esta cuenta** escribe el nombre correcto por ti.
+
 Para publicar como Página de Facebook, cambia primero a esa Página en Chrome.
 
 ### 3. Publicar
@@ -110,9 +112,9 @@ Si una plataforma cambia su interfaz, el archivo que hay que corregir es `app/pl
 ## Seguridad y privacidad
 
 - Solo se puede acceder al sitio desde este ordenador (`127.0.0.1`). Las solicitudes de otros sitios se rechazan.
-- No se leen ni se guardan contraseñas, cookies ni datos de sesión. Lo único que se guarda son los nombres de las cuentas.
+- No se leen ni se guardan contraseñas, cookies ni datos de sesión. El programa solo guarda los nombres de las cuentas y los registros de errores de `data/hatalar`.
 - Mientras la casilla de depuración remota de Chrome esté marcada, los programas del ordenador pueden pedir permiso para conectarse a Chrome. No aceptes una ventana de permiso que no esperabas. En un ordenador compartido, desmarca la casilla cuando termines.
-- Las capturas de pantalla de la carpeta `data/hatalar` pueden contener contenido de tus cuentas. Compártelas solo con personas de confianza.
+- Las capturas y el registro `kayit.txt` de la carpeta `data/hatalar` pueden contener nombres de cuentas y contenido de las cuentas. Compártelos solo con personas de confianza.
 
 ## Límites y riesgos conocidos
 
@@ -126,6 +128,7 @@ Si una plataforma cambia su interfaz, el archivo que hay que corregir es `app/pl
 - El ordenador y Chrome deben seguir encendidos mientras el programa trabaja.
 - Los límites por imagen varían según la plataforma. Se admiten JPEG, PNG y WebP; el vídeo no.
 - Mantén desactivada la opción «Share to → Facebook» de Instagram, o la publicación aparecerá dos veces en Facebook.
+- Si la publicación falló en algunas plataformas, desactiva las que ya publicaron antes de volver a pulsar **Publicar**, o la publicación aparecerá dos veces en ellas.
 
 ### Estado de las pruebas
 
@@ -133,9 +136,9 @@ Si una plataforma cambia su interfaz, el archivo que hay que corregir es `app/pl
 |---|---|
 | Pruebas automáticas (con sitios simulados), incluidos los 10 idiomas de interfaz | Superadas |
 | Preparación, varias imágenes y comprobación de cuenta en los sitios reales (macOS, sitios en turco) | Probado en modo de prueba |
-| Pulsar Publicar en los sitios reales | **Aún no probado** |
+| Pulsar Publicar en los sitios reales | Funcionó en una prueba real en Windows |
 | Lectura de la cuenta en el modo Página de Facebook | **Aún no probado** |
-| Ejecución en Windows | **Aún no probado** |
+| Ejecución en Windows | Funcionó en una prueba real |
 
 Haz tu primera publicación real en una sola plataforma, con una publicación sin importancia.
 

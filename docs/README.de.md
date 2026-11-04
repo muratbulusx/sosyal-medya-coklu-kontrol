@@ -52,6 +52,8 @@ Chrome fragt möglicherweise bei jedem erneuten Start des Programms wieder nach 
 2. Füge ein Bild hinzu und klicke auf **Testen**. Es wird nichts geteilt.
 3. Wenn das im Statusbereich angezeigte Konto stimmt, klicke auf **Dieses Konto speichern**.
 
+Der gespeicherte Name muss mit dem übereinstimmen, was die Website anzeigt. Instagram und X verwenden den Benutzernamen. Facebook und NSosyal verwenden den Anzeigenamen, zum Beispiel den vollständigen Seitennamen. Wenn die Namen abweichen, stoppt das Programm auf dieser Plattform, ohne zu teilen. **Dieses Konto speichern** trägt den richtigen Namen für dich ein.
+
 Um als Facebook-Seite zu teilen, wechsle in Chrome zuerst zu dieser Seite.
 
 ### 3. Teilen
@@ -110,9 +112,9 @@ Wenn eine Plattform ihre Oberfläche ändert, ist `app/platforms.py` die Datei, 
 ## Sicherheit und Datenschutz
 
 - Die Seite ist nur von diesem Computer aus erreichbar (`127.0.0.1`). Anfragen von anderen Websites werden abgelehnt.
-- Passwörter, Cookies und Sitzungsdaten werden weder gelesen noch gespeichert. Gespeichert werden nur Kontonamen.
+- Passwörter, Cookies und Sitzungsdaten werden weder gelesen noch gespeichert. Das Programm speichert nur Kontonamen und die Fehlerprotokolle in `data/hatalar`.
 - Solange das Kästchen für das Remote-Debugging in Chrome aktiviert ist, können Programme auf dem Computer um die Erlaubnis bitten, sich mit Chrome zu verbinden. Bestätige kein Berechtigungsfenster, das du nicht erwartet hast. Deaktiviere das Kästchen auf einem gemeinsam genutzten Computer, wenn du fertig bist.
-- Screenshots im Ordner `data/hatalar` können Kontoinhalte enthalten. Teile sie nur mit Personen, denen du vertraust.
+- Screenshots und das Protokoll `kayit.txt` im Ordner `data/hatalar` können Kontonamen und Kontoinhalte enthalten. Teile sie nur mit Personen, denen du vertraust.
 
 ## Bekannte Grenzen und Risiken
 
@@ -126,6 +128,7 @@ Wenn eine Plattform ihre Oberfläche ändert, ist `app/platforms.py` die Datei, 
 - Computer und Chrome müssen eingeschaltet bleiben, solange das Programm arbeitet.
 - Die Grenzen pro Bild unterscheiden sich je nach Plattform. JPEG, PNG und WebP werden unterstützt, Video nicht.
 - Lass bei Instagram die Option „Share to → Facebook“ ausgeschaltet, sonst erscheint der Beitrag zweimal auf Facebook.
+- Wenn das Teilen auf einigen Plattformen fehlgeschlagen ist, schalte die bereits erfolgreichen Plattformen aus, bevor du erneut auf **Teilen** klickst, sonst erscheint der Beitrag dort zweimal.
 
 ### Teststatus
 
@@ -133,9 +136,9 @@ Wenn eine Plattform ihre Oberfläche ändert, ist `app/platforms.py` die Datei, 
 |---|---|
 | Automatische Tests (mit gefälschten Websites), einschließlich aller 10 Oberflächensprachen | Bestanden |
 | Vorbereitung, mehrere Bilder und Kontoprüfung auf den echten Websites (macOS, türkischsprachige Websites) | Im Testmodus ausprobiert |
-| Klick auf Teilen auf den echten Websites | **Noch nicht ausprobiert** |
+| Klick auf Teilen auf den echten Websites | Hat in einem echten Test unter Windows funktioniert |
 | Konto auslesen im Modus Facebook-Seite | **Noch nicht ausprobiert** |
-| Ausführung unter Windows | **Noch nicht ausprobiert** |
+| Ausführung unter Windows | Hat in einem echten Test funktioniert |
 
 Mach dein erstes echtes Teilen auf nur einer Plattform und mit einem unwichtigen Beitrag.
 

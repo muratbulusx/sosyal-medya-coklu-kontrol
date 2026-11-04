@@ -63,8 +63,8 @@ class Engine:
         accounts=None,
         close_delay=30.0,
         login_timeout=600.0,
-        unknown_page_timeout=45.0,
-        account_timeout=15.0,
+        unknown_page_timeout=60.0,
+        account_timeout=60.0,
         poll=1.0,
         connect=connect_to_open_chrome,
     ):
@@ -123,7 +123,20 @@ class Engine:
         return (await self.get_browser()).contexts[0]
 
     def connect(self):
-        self.call(self.get_browser(), timeout=75)
+        try:
+            self.call(self.get_browser(), timeout=75)
+        except Exception as error:
+            self._write_log(f"baglanti hatasi: {error}")
+            raise
+
+    # Destek için her platformun sonucu tek dosyada toplanır. Gönderi metni yazılmaz.
+    def _write_log(self, line):
+        try:
+            self._error_dir.mkdir(parents=True, exist_ok=True)
+            with (self._error_dir / "kayit.txt").open("a", encoding="utf-8") as log:
+                log.write(f"{datetime.now():%Y-%m-%d %H:%M:%S} {line}\n")
+        except OSError:
+            pass
 
     def _close_later(self, page):
         async def close():
@@ -241,17 +254,26 @@ class Engine:
             result["status"] = "hata"
             detail = error.message if isinstance(error, Problem) else first_line(error)
             result["message"] = message("run.failed", detail=detail)
+            self._write_log(f"{platform.id} hata: {error}")
             if page:
                 await self._save_screenshot(page, platform)
+        finally:
+            self._write_log(
+                f"{platform.id} sonuc: durum={result['status']} gercek={live} hesap={result['account']!r} "
+                f"beklenen={self.accounts.get(platform.id)!r} adres={page.url if page else None} "
+                f"mesaj={result['message']}"
+            )
 
     async def _run(self, job, selected, live):
         try:
             context = await self.get_context()
+            self._write_log(f"baslangic: {sys.platform} python={sys.version.split()[0]} chrome={self._browser.version}")
             for platform in selected:
                 result = next(r for r in self.state["results"] if r["id"] == platform.id)
                 await self._run_one(context, platform, job, result, live)
         except Exception as error:
             print(f"Chrome bağlantı hatası: {first_line(error)}", file=sys.stderr)
+            self._write_log(f"baglanti hatasi: {error}")
             for result in self.state["results"]:
                 if result["status"] == "bekliyor":
                     result["status"] = "hata"

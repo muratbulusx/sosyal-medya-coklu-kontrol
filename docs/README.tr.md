@@ -52,6 +52,8 @@ Program her yeniden açıldığında Chrome izni tekrar sorabilir.
 2. Bir görsel ekleyip **Dene**'ye bas. Hiçbir şey paylaşılmaz.
 3. Durum bölümünde görünen hesap doğruysa **Bu hesabı kaydet**'e bas.
 
+Kaydedilen ad sitede görünenle aynı olmalı. Instagram ve X kullanıcı adını kullanır. Facebook ve NSosyal ise görünen adı, örneğin Sayfa'nın tam adını kullanır. Adlar farklıysa program o platformda paylaşmadan durur. **Bu hesabı kaydet** doğru adı senin yerine yazar.
+
 Facebook'ta bir Sayfa adına paylaşacaksan önce Chrome'da o Sayfa'ya geç.
 
 ### 3. Paylaş
@@ -110,9 +112,9 @@ Bir platform arayüzünü değiştirirse düzeltilecek yer `app/platforms.py` do
 ## Güvenlik ve gizlilik
 
 - Site yalnızca bu bilgisayardan erişilebilir (`127.0.0.1`). Başka sitelerden gelen istekler reddedilir.
-- Şifre, çerez veya oturum bilgisi okunmaz ve saklanmaz. Kaydedilen tek şey hesap adlarıdır.
+- Şifre, çerez veya oturum bilgisi okunmaz ve saklanmaz. Program yalnızca hesap adlarını ve `data/hatalar` klasöründeki hata kayıtlarını saklar.
 - Chrome'daki uzaktan hata ayıklama kutusu açıkken bilgisayardaki programlar Chrome'a bağlanmak için izin isteyebilir. Beklemediğin bir izin penceresini onaylama. Ortak bilgisayarda işin bitince kutuyu kapat.
-- `data/hatalar` klasöründeki ekran görüntüleri hesap içeriği barındırabilir, yalnızca güvendiğin kişilerle paylaş.
+- `data/hatalar` klasöründeki ekran görüntüleri ve `kayit.txt` dosyası hesap adları ve hesap içeriği barındırabilir, yalnızca güvendiğin kişilerle paylaş.
 
 ## Bilinen sınırlar ve riskler
 
@@ -126,6 +128,7 @@ Bir platform arayüzünü değiştirirse düzeltilecek yer `app/platforms.py` do
 - Program çalışırken bilgisayar ve Chrome açık kalmalıdır.
 - Görsel başına sınırlar platformlara göre değişir. Desteklenen türler JPEG, PNG ve WebP'dir, video desteklenmez.
 - Instagram'daki "Şurada paylaş → Facebook" seçeneğini kapalı tut, yoksa gönderi Facebook'ta iki kez çıkar.
+- Paylaşım bazı platformlarda başarısız olduysa **Paylaş**'a yeniden basmadan önce paylaşımın tamamlandığı platformları kapat, yoksa gönderi onlarda iki kez çıkar.
 
 ### Test durumu
 
@@ -133,9 +136,9 @@ Bir platform arayüzünü değiştirirse düzeltilecek yer `app/platforms.py` do
 |---|---|
 | Otomatik testler (sahte sitelerle), 10 arayüz dili dahil | Geçiyor |
 | Gerçek sitelerde hazırlık, çoklu görsel ve hesap kontrolü (macOS, Türkçe siteler) | Dene modunda denendi |
-| Paylaş düğmesine gerçek sitelerde basma | **Henüz denenmedi** |
+| Paylaş düğmesine gerçek sitelerde basma | Windows'ta bir gerçek denemede çalıştı |
 | Facebook Sayfası modunda hesap okuma | **Henüz denenmedi** |
-| Windows'ta çalıştırma | **Henüz denenmedi** |
+| Windows'ta çalıştırma | Bir gerçek denemede çalıştı |
 
 İlk gerçek paylaşımını tek platformda, önemsiz bir gönderiyle yap.
 

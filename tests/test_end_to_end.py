@@ -228,6 +228,7 @@ class EngineTests(Base):
         self.run_job(engine, ["x", "facebook"], True)
         self.assertEqual(self.statuses(engine), {"facebook": "hata", "x": "hata"})
         self.assertEqual(engine.state["results"][0]["message"], CONNECT_HELP)
+        self.assertIn("reddedildi", (self.dir / "hatalar" / "kayit.txt").read_text(encoding="utf-8"))
         self.assertFalse(engine.state["running"])
         self.assertEqual(self.sites.posts, [])
 
@@ -239,6 +240,9 @@ class EngineTests(Base):
         result = next(r for r in engine.state["results"] if r["id"] == "x")
         self.assertEqual(result["account"], "resmi_x")
         self.assertFalse(result["accountOk"])
+        log = (self.dir / "hatalar" / "kayit.txt").read_text(encoding="utf-8")
+        self.assertIn("x sonuc: durum=hata", log)
+        self.assertNotIn("Merhaba", log, "gönderi metni kayda yazılmamalı")
         self.assertEqual(
             result["message"], message("run.failed", detail=message("error.wrongAccount", account="resmi_x", expected="resmi_x2"))
         )

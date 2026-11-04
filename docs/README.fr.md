@@ -52,6 +52,8 @@ Chrome peut redemander l'autorisation à chaque réouverture du programme.
 2. Ajoutez une image et appuyez sur **Essayer**. Rien n'est publié.
 3. Si le compte affiché dans la section d'état est le bon, appuyez sur **Enregistrer ce compte**.
 
+Le nom enregistré doit correspondre à celui affiché par le site. Instagram et X utilisent le nom d'utilisateur. Facebook et NSosyal utilisent le nom affiché, par exemple le nom complet de la Page. Si les noms diffèrent, le programme s'arrête sur cette plateforme sans publier. **Enregistrer ce compte** saisit le bon nom à votre place.
+
 Pour publier en tant que Page Facebook, passez d'abord à cette Page dans Chrome.
 
 ### 3. Publier
@@ -110,9 +112,9 @@ Si une plateforme modifie son interface, le fichier à corriger est `app/platfor
 ## Sécurité et confidentialité
 
 - Le site n'est accessible que depuis cet ordinateur (`127.0.0.1`). Les requêtes venant d'autres sites sont rejetées.
-- Les mots de passe, cookies et données de session ne sont ni lus ni conservés. Les noms de comptes sont la seule chose enregistrée.
+- Les mots de passe, cookies et données de session ne sont ni lus ni stockés. Le programme enregistre uniquement les noms de compte et les journaux d'erreurs dans `data/hatalar`.
 - Tant que la case de débogage à distance de Chrome est cochée, des programmes de l'ordinateur peuvent demander l'autorisation de se connecter à Chrome. N'approuvez pas une fenêtre d'autorisation que vous n'attendiez pas. Sur un ordinateur partagé, décochez la case quand vous avez terminé.
-- Les captures d'écran du dossier `data/hatalar` peuvent contenir le contenu de vos comptes. Ne les partagez qu'avec des personnes de confiance.
+- Les captures d'écran et le journal `kayit.txt` du dossier `data/hatalar` peuvent contenir des noms de compte et du contenu des comptes. Ne les partagez qu'avec des personnes de confiance.
 
 ## Limites et risques connus
 
@@ -126,6 +128,7 @@ Si une plateforme modifie son interface, le fichier à corriger est `app/platfor
 - L'ordinateur et Chrome doivent rester allumés pendant que le programme travaille.
 - Les limites par image varient selon la plateforme. Les formats JPEG, PNG et WebP sont pris en charge, pas la vidéo.
 - Laissez désactivée l'option « Share to → Facebook » d'Instagram, sinon la publication apparaîtra deux fois sur Facebook.
+- Si la publication a échoué sur certaines plateformes, désactivez celles où elle a réussi avant d'appuyer de nouveau sur **Publier**, sinon la publication y apparaîtra deux fois.
 
 ### État des tests
 
@@ -133,9 +136,9 @@ Si une plateforme modifie son interface, le fichier à corriger est `app/platfor
 |---|---|
 | Tests automatisés (avec de faux sites), y compris les 10 langues d'interface | Réussis |
 | Préparation, images multiples et vérification du compte sur les vrais sites (macOS, sites en turc) | Essayé en mode essai |
-| Appui sur Publier sur les vrais sites | **Pas encore essayé** |
+| Appui sur Publier sur les vrais sites | A fonctionné lors d'un essai réel sous Windows |
 | Lecture du compte en mode Page Facebook | **Pas encore essayé** |
-| Exécution sous Windows | **Pas encore essayé** |
+| Exécution sous Windows | A fonctionné lors d'un essai réel |
 
 Faites votre première vraie publication sur une seule plateforme, avec un message sans importance.
 
