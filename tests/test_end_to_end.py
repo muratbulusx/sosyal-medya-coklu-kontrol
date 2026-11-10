@@ -267,6 +267,22 @@ class EngineTests(Base):
         self.assertEqual(engine.state["results"][0]["message"]["params"]["detail"], message("error.accountUnreadable"))
         self.assertEqual(self.sites.posts, [])
 
+    def test_reads_accounts_in_narrow_windows(self):
+        engine = self.engine_with([])
+        cases = [
+            (self.only_x("x-dar"), "resmi_x"),
+            (self.only_x("x-kutu"), "resmi_x"),
+            (create_platforms({"facebook": f"{self.sites.origin}/facebook-dar"})[1], 'Resmi Sayfa İlçe "Müdürlüğü"'),
+        ]
+        for platform, expected in cases:
+
+            async def read():
+                tab = await (await engine.get_context()).new_page()
+                await tab.goto(platform.url)
+                return await platform.current_account(tab)
+
+            self.assertEqual(engine.call(read(), timeout=20), expected, platform.url)
+
     def test_live_refuses_without_saved_accounts(self):
         async def must_not_connect(playwright):
             self.fail("tarayıcıya bağlanmamalı")

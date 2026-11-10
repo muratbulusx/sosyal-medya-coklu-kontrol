@@ -207,6 +207,13 @@ class Engine:
         )
         if result["accountOk"]:
             return
+        if not result["account"]:
+            # Hesap okuyucu çoğu zaman pencere genişliğine göre değişen düzende şaşırır.
+            try:
+                width = await page.evaluate("innerWidth")
+            except Exception:
+                width = None
+            self._write_log(f"{platform.id} hesap okunamadi: pencere genisligi={width}")
         if result["account"] and expected:
             raise Problem("error.wrongAccount", account=result["account"], expected=expected)
         if not result["account"] and live:

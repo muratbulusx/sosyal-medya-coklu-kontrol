@@ -14,8 +14,8 @@ ACCOUNTS = f"""
   <div aria-haspopup="dialog"><img alt="Resmi NSosyal" src="{PIXEL}" width="10" height="10"></div>"""
 
 
-def page(body):
-    return f"""<!doctype html><meta charset="utf-8"><body>{ACCOUNTS}{body}
+def page(body, accounts=ACCOUNTS):
+    return f"""<!doctype html><meta charset="utf-8"><body>{accounts}{body}
 <script>
   const report = (site, extra = {{}}) => {{
     const input = document.querySelector('input[type=file]');
@@ -60,6 +60,30 @@ PAGES = {
       <button onclick="report('nsosyal').then(() => { document.querySelector('.cap').value = '' })">Gönder</button>
     </div>
     <article><p>Bu haber paylaşıldı</p><button onclick="report('baskasinin-gonderisi')">Paylaş</button></article>"""),
+    # Dar pencerede X'in sol menüsü yalnızca simgelerden oluşur; hesap düğmesinde yazı yoktur.
+    "x-dar": page(
+        f"""<div data-testid="SideNav_AccountSwitcher_Button"><img src="{PIXEL}"></div>
+    <a data-testid="AppTabBar_Profile_Link" href="/resmi_x"></a>"""
+        + X_FIELDS
+        + '<button data-testid="tweetButton">Post</button>',
+        accounts="",
+    ),
+    # Menü hiç yoksa gönderi kutusundaki kendi resmimiz okunur, akıştaki başkasınınki değil.
+    "x-kutu": page(
+        """<article><div data-testid="UserAvatar-Container-baskasi"></div><p>Başkasının gönderisi</p></article>
+    <div><div data-testid="UserAvatar-Container-resmi_x"></div>"""
+        + X_FIELDS
+        + '<button data-testid="tweetButton">Post</button></div>',
+        accounts="",
+    ),
+    # Dar pencerede Facebook'un sol menüsü gizlenir; ad sayfanın kendi verisinden okunur.
+    "facebook-dar": page(
+        """<script>[["CurrentUserInitialData",[],{"ACCOUNT_ID":"1","USER_ID":"2",
+    "NAME":"Resmi Sayfa \\u0130l\\u00e7e \\"M\\u00fcd\\u00fcrl\\u00fc\\u011f\\u00fc\\"","SHORT_NAME":"Resmi"},270]]</script>
+    <div role="navigation" style="display:none"><a href="/profile.php?id=1">Gizli Menü</a></div>
+    <button>Ne düşünüyorsun, Sayfa?</button>""",
+        accounts="",
+    ),
     # Paylaş düğmesi hiç olmayan bozuk sayfa
     "bozuk": page(X_FIELDS),
     # Düğmeye basılıyor ama hiçbir sonuç görünmüyor

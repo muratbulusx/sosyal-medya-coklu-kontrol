@@ -95,11 +95,27 @@ class X:
         return await visible(self._box(page))
 
     async def current_account(self, page):
-        text = await (
-            page.locator('[data-testid="SideNav_AccountSwitcher_Button"]').first.inner_text(timeout=1_000)
+        # Pencere darsa sol menü daralır ve hesap düğmesinde yazı kalmaz; o zaman profil
+        # bağlantısına, o da yoksa gönderi kutusunun yanındaki kendi resmimize bakılır.
+        return await page.evaluate(
+            """() => {
+              const text = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]')?.innerText ?? '';
+              const handle = text.match(/@(\\S+)/)?.[1];
+              if (handle) return handle;
+
+              const profile = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]');
+              const fromLink = profile?.getAttribute('href')?.split('/').filter(Boolean)[0];
+              if (fromLink) return fromLink;
+
+              // Akıştaki başkalarının resimleri karışmasın diye yalnızca gönderi kutusunun içine bakılır.
+              let composer = document.querySelector('[data-testid="tweetTextarea_0"]');
+              while (composer && !composer.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
+                composer = composer.parentElement;
+              }
+              const avatar = composer?.querySelector('[data-testid^="UserAvatar-Container-"]');
+              return avatar?.dataset.testid.slice('UserAvatar-Container-'.length) || null;
+            }"""
         )
-        match = re.search(r"@(\S+)", text)
-        return match.group(1) if match else None
 
     async def prepare(self, page, files, caption):
         await attach_files(page, page.locator('input[data-testid="fileInput"]'), files)
@@ -226,9 +242,21 @@ class Facebook:
         return await visible(self._trigger(page))
 
     async def current_account(self, page):
-        # Sol menüdeki yazılı ilk bağlantı o an kullanılan profil veya Sayfa'dır.
+        # Sayfanın kendi verisindeki ad pencere genişliğinden bağımsızdır. Bulunamazsa sol
+        # menüdeki yazılı ilk bağlantıya (o an kullanılan profil veya Sayfa) bakılır; o menü
+        # dar pencerelerde gizlenir.
         return await page.evaluate(
             """() => {
+              for (const script of document.querySelectorAll('script')) {
+                const match = script.textContent.match(
+                  /"CurrentUserInitialData",\\[\\],\\{[^{}]*?"NAME":("(?:[^"\\\\]|\\\\.)*")/,
+                );
+                if (!match) continue;
+                try {
+                  const name = JSON.parse(match[1]).trim();
+                  if (name) return name;
+                } catch {}
+              }
               const link = [...document.querySelectorAll('[role="navigation"] a[href]')].find(
                 (a) => a.getBoundingClientRect().width > 0 && a.innerText.trim(),
               );
